@@ -1,0 +1,131 @@
+There are 3 Common approches to generate Docker image.
+
+1) Accounts:-  we need to writr a docker file with list of instructions.
+2)Buildpacks:- we dont have to write any instructions manually, with help of maven command we can generate docker image.
+               this simplifies containeriztion
+3)Google Jib:- Product developed by google, using this java tool and maven plug in we can generate docker image.
+
+>>In the MS where we need to generate Docker image'
+
+>>in pom.xml of that file next to versioning mention <packaging>jar</packaging>
+>>go to target and delete existing compiled classes inside it.
+>> open new terminal at ms file location.
+Commands
+- pwd  
+- mvn clean install (mvn should be installed and homepath should be set up)
+- mvn clean install (telling mvn to compile springboot application)
+  Now, jar will be generated under taget folder(which contains all dependencies which are required except java libraries)
+- mvn spring-boot:run (to run our springboot application)
+- ctrl+c to stop running instance
+  Using Java Commands to run Spring app
+- java -jar target/nameofjar.jar
+ example: java -jar target/accounts-0.0.1-SNAPSHOT.jar
+
+Writing Docker file for accounts MS:
+=====================================
+>> Start your docker first
+>>Create new file named Dockerfile under your ms with no extention
+                        ==========
+>>need to write instructions that can be used to generate docker image.
+- to run ms need to install jre
+so inside file we are telling to docker we are having dependency on another docker image so please 
+install that docker image
+
+>> FROM openjdk:17-jdk-slim  // which is (open image:tagname) this is avilable in docker hub.
+>> MAINTAINER shreyas.com    // that who is maintaining this docker image   
+>> COPY target/account-0.0.1-SNAPSHOT.jar account-0.0.1-SNAPSHOT.jar // with these we telling docker server there is jar inside target folder with this name 
+                                                                     //and copy same jar into docker image.
+>> ENTRYPOINT ["java","-jar","account-0.0.1-SNAPSHOT.jar"]          // when someone trying  to generate container from docker image please execute these commands.
+now docker file is ready now we need to provide it to docker server
+
+now Inside terminal of location,
+- docker version 
+- docker build . -t shreyas/accounts:s4  (generate docker file with this name by using the folder present in this location)(docker server should be always running)
+- docker images (it will list out all the docker images inside my local system)
+- docker inspect image abba(imageid) (will get all details of that image)
+- docker run -p 8080:8080 shreyas/accounts:s4 (we can run a container from docker image,my docker container is going to start at 8080 and we are telling to expose the container port 8080 followed by docker image name)   
+- ctl+c (to stop container)
+- docker run -d -p 8080:8080 shreyas/accounts:s4 (run in detached mode)
+- docker ps (to see list of containers which are running)
+- docker ps -a (all containers in stopped status)
+- docker start =containerid== (to start docker container)
+- docker stop 
+- docker ps (to check running containers)
+============================================================================================================================================================ 
+
+2) Using Build packs to generate Docker image
+=============================================
+- Developed by Heroku, it is a framework or an echo system
+- In pom.xml file next after version we need to make packaging as jar(<packaging>jar</packaging>)
+- Maven plugin should be present inside your pom.xml
+- Inside Maven congiguration we need to invoke few tags to give our docker image name
+- <Configuration>
+  <image>
+   <name>shreyas/${project.artifactId}:s4</name>
+  </Configuration>
+- goto terminal 
+- change to microservice location cd  ..
+- mvn spring-boot:build-image (takes time to download all the required base image from packeto buildpacks)(docker server should be always running)
+- now, docker image will be built with the respected image name
+- check by, docker images cmd
+- The size will be lesser compared to image generated through dockerfile
+- docker run -d -p 8090:8090 shreyas/loans:s4 (to run my loans docker image as container)
+- we can see running container in docker desktop.
+=============================================================================================================================================================
+
+3) Using Google Jib to gernerate Docker image
+=============================================
+- need to go to google repo where jib website is there with all the required instructions.
+- Jib strictly works only for java applications
+- select maven/gradle packaging -> then add the plugin in pom.xml under plugins section. under configuration <to><image>shreyas/${project.artifactId}:s4</image></to>
+ 	
+- In pom.xml file next after version we need to make packaging as jar(<packaging>jar</packaging>)
+- goback to git hub to find cmd's to generate docker image
+- mvn compile jib:dockerBuild (Before that change directory to ms directory)
+- docker images (to check the generated images, faster than build packs and fast.
+- docker run -d -p 9000:9000 shreyas/cards:s4 (to run my cards docker image as container)
+- we can generate docker images without installing docker inside my system by using cmd mvn compile jib:build
+===============================================================================================================================================================
+
+Pushing Docker images from local to remote Repository
+=====================================================
+- docker image push docker.io/shreyas/accounts:s4  (Docker desktop shoul be up and ruuning)
+- docker image push docker.io/shreyas/loans:s4
+                                                     
+==============================================================================================================================================================
+
+>>>Docker Compose
+  ===============
+it is a tool for defining and running multi-container Docker applications, we use yaml file to configure our applications service, then with single command
+we can create and start all the services from configuration.
+- docker compose version (to see version of docker compose)
+- we need to write a yaml file named docker-compose.yml under ms
+- In that file
+services:
+	accounts:
+        	image:"shreyas/accounts:s4"
+                container_name:acounts-ms
+                ports:
+                	-"8080:8080"
+                deploy:
+                	resources:
+                        	limits:
+                                	memory:700m
+               networks:
+               		-shreyas
+               networks:
+                        - eazybank
+
+
+- |||ly create for other microServices.
+- goto file location where docker compose file is present
+- In cmd, docker compose up -d (start all containers in detached mode)
+- docker ps (we can see all the containers,since we have docker compose file in account ms, it will be the parent file under it we will have rest of containers.
+- docker compose down (it will stop all the containers and all are deleted)
+- docker compose stop (just to stop without deleting not preffered)
+- docker compose start(just to start the existing containers which are not deleted).
+install logs explorer extention for better visibality and analytics.
+                              
+  	
+
+            
